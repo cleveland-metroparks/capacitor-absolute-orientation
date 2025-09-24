@@ -13,25 +13,95 @@ npx cap sync
 
 <docgen-index>
 
-* [`echo(...)`](#echo)
+* [`start()`](#start)
+* [`stop()`](#stop)
+* [`isActivated()`](#isactivated)
+* [`addReadingListener(...)`](#addreadinglistener)
+* [`removeReadingListener(...)`](#removereadinglistener)
+* [Interfaces](#interfaces)
+* [Type Aliases](#type-aliases)
 
 </docgen-index>
 
 <docgen-api>
 <!--Update the source file JSDoc comments and rerun docgen to update the docs below-->
 
-### echo(...)
+### start()
 
 ```typescript
-echo(options: { value: string; }) => Promise<{ value: string; }>
+start() => Promise<void>
 ```
 
-| Param         | Type                            |
-| ------------- | ------------------------------- |
-| **`options`** | <code>{ value: string; }</code> |
+--------------------
 
-**Returns:** <code>Promise&lt;{ value: string; }&gt;</code>
+
+### stop()
+
+```typescript
+stop() => Promise<void>
+```
 
 --------------------
+
+
+### isActivated()
+
+```typescript
+isActivated() => Promise<{ value: boolean; }>
+```
+
+**Returns:** <code>Promise&lt;{ value: boolean; }&gt;</code>
+
+--------------------
+
+
+### addReadingListener(...)
+
+```typescript
+addReadingListener(callback: (reading: AbsoluteOrientationReading) => void) => Promise<CallbackId>
+```
+
+| Param          | Type                                                                                                    |
+| -------------- | ------------------------------------------------------------------------------------------------------- |
+| **`callback`** | <code>(reading: <a href="#absoluteorientationreading">AbsoluteOrientationReading</a>) =&gt; void</code> |
+
+**Returns:** <code>Promise&lt;string&gt;</code>
+
+--------------------
+
+
+### removeReadingListener(...)
+
+```typescript
+removeReadingListener(id: CallbackId) => Promise<void>
+```
+
+| Param    | Type                |
+| -------- | ------------------- |
+| **`id`** | <code>string</code> |
+
+--------------------
+
+
+### Interfaces
+
+
+#### AbsoluteOrientationReading
+
+| Prop             | Type                                          |
+| ---------------- | --------------------------------------------- |
+| **`timestamp`**  | <code>number</code>                           |
+| **`quaternion`** | <code>[number, number, number, number]</code> |
+| **`alpha`**      | <code>number</code>                           |
+| **`beta`**       | <code>number</code>                           |
+| **`gamma`**      | <code>number</code>                           |
+
+
+### Type Aliases
+
+
+#### CallbackId
+
+<code>string</code>
 
 </docgen-api>
