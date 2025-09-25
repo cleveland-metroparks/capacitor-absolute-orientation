@@ -88,13 +88,21 @@ removeReadingListener(id: CallbackId) => Promise<void>
 
 #### AbsoluteOrientationReading
 
-| Prop             | Type                                          |
-| ---------------- | --------------------------------------------- |
-| **`timestamp`**  | <code>number</code>                           |
-| **`quaternion`** | <code>[number, number, number, number]</code> |
-| **`alpha`**      | <code>number</code>                           |
-| **`beta`**       | <code>number</code>                           |
-| **`gamma`**      | <code>number</code>                           |
+| Prop                 | Type                                              |
+| -------------------- | ------------------------------------------------- |
+| **`timestamp`**      | <code>number</code>                               |
+| **`quaternion`**     | <code><a href="#quaternion">Quaternion</a></code> |
+| **`compassHeading`** | <code>number</code>                               |
+
+
+#### Quaternion
+
+| Prop    | Type                |
+| ------- | ------------------- |
+| **`x`** | <code>number</code> |
+| **`y`** | <code>number</code> |
+| **`z`** | <code>number</code> |
+| **`w`** | <code>number</code> |
 
 
 ### Type Aliases

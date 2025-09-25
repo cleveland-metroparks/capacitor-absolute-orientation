@@ -16,16 +16,11 @@ class AbsoluteOrientationPlugin : Plugin() {
         implementation = AbsoluteOrientation(context, onReading = ::onReading)
     }
 
-    private fun onReading(reading: Reading) {
+    private fun onReading(reading: AbsoluteOrientationReading) {
+        val obj = reading.toJSObject()
         readingListeners.forEach { listener ->
-            val ret = JSObject()
-            ret.put("timestamp", reading.timestamp)
-            ret.put("quaternion", reading.quaternion.asArray())
-            ret.put("alpha", reading.alpha)
-            ret.put("beta", reading.beta)
-            ret.put("gamma", reading.gamma)
             listener.value.setKeepAlive(true)
-            listener.value.resolve(ret)
+            listener.value.resolve(obj)
         }
     }
 

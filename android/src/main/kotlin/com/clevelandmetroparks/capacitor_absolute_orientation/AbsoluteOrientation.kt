@@ -6,9 +6,10 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.SystemClock
+import kotlin.math.atan2
 
 class AbsoluteOrientation(
-    private val context: Context, val onReading: (reading: Reading) -> Unit
+    private val context: Context, val onReading: (reading: AbsoluteOrientationReading) -> Unit
 ) {
 
     private val sensorManager: SensorManager by lazy {
@@ -25,17 +26,11 @@ class AbsoluteOrientation(
                 System.currentTimeMillis() - ((SystemClock.elapsedRealtimeNanos() - event.timestamp) / 1_000_000)
             val quaternion =
                 Quaternion(event.values[0], event.values[1], event.values[2], event.values[3])
-            val rotationMatrix = FloatArray(9)
-            SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values)
-            val orientation = FloatArray(3)
-            SensorManager.getOrientation(rotationMatrix, orientation)
-            val azimuth = Math.toDegrees(orientation[0].toDouble()).toFloat()
-            val pitch = Math.toDegrees(orientation[1].toDouble()).toFloat()
-            val roll = Math.toDegrees(orientation[2].toDouble()).toFloat()
-            val alpha = if (azimuth < 0) azimuth + 360f else azimuth
-            val beta = pitch
-            val gamma = roll
-            val reading = Reading(timestamp, quaternion, alpha, beta, gamma)
+            val reading = AbsoluteOrientationReading(
+                timestamp,
+                quaternion,
+                quaternionToCompassHeading(quaternion)
+            )
             onReading(reading)
         }
 
@@ -65,5 +60,18 @@ class AbsoluteOrientation(
 
     fun isActivated(): Boolean {
         return started
+    }
+
+    private fun quaternionToCompassHeading(quaternion: Quaternion): Float {
+        val x = quaternion.x
+        val y = quaternion.y
+        val z = quaternion.z
+        val w = quaternion.w
+        val yaw = atan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
+        var heading = Math.toDegrees(-yaw)
+        if (heading < 0) {
+            heading += 360
+        }
+        return heading.toFloat()
     }
 }
