@@ -6,7 +6,15 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.SystemClock
+import com.getcapacitor.Logger
+import java.lang.Math.toDegrees
+import java.lang.Math.toRadians
+import kotlin.math.asin
 import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.sin
 
 class AbsoluteOrientation(
     private val context: Context, val onReading: (reading: AbsoluteOrientationReading) -> Unit
@@ -24,13 +32,21 @@ class AbsoluteOrientation(
             }
             val timestamp =
                 System.currentTimeMillis() - ((SystemClock.elapsedRealtimeNanos() - event.timestamp) / 1_000_000)
-            val quaternion =
-                Quaternion(event.values[0], event.values[1], event.values[2], event.values[3])
+
+            val quaternionArray = FloatArray(size = 4)
+            SensorManager.getQuaternionFromVector(quaternionArray, event.values)
+            val quaternion = Quaternion(
+                x = quaternionArray[1],
+                y = quaternionArray[2],
+                z = quaternionArray[3],
+                w = quaternionArray[0]
+            )
             val reading = AbsoluteOrientationReading(
                 timestamp,
                 quaternion,
                 quaternionToCompassHeading(quaternion)
             )
+//            Logger.info("AbsoluteOrientation", "$alpha $beta $gamma")
             onReading(reading)
         }
 
@@ -43,7 +59,7 @@ class AbsoluteOrientation(
         }
         sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)?.also { rotationSensor ->
             if (sensorManager.registerListener(
-                    sensorEventListener, rotationSensor, SensorManager.SENSOR_DELAY_NORMAL
+                    sensorEventListener, rotationSensor, SensorManager.SENSOR_DELAY_FASTEST
                 )
             ) {
                 started = true
@@ -67,11 +83,32 @@ class AbsoluteOrientation(
         val y = quaternion.y
         val z = quaternion.z
         val w = quaternion.w
-        val yaw = atan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
-        var heading = Math.toDegrees(-yaw)
+        val yaw = atan2(2.0 * (x * z - w * y), 1.0 - 2.0 * (y * y + z * z))
+        var heading = toDegrees(-yaw)
         if (heading < 0) {
             heading += 360
         }
         return heading.toFloat()
+    }
+
+    private fun alphaBetaGammaToQuaternion(alpha: Float, beta: Float, gamma: Float): Quaternion {
+        val x = toRadians(beta.toDouble())
+        val y = toRadians(alpha.toDouble())
+        val z = -toRadians(gamma.toDouble())
+
+        val cX = cos(x / 2.0)
+        val cY = cos(y / 2.0)
+        val cZ = cos(z / 2.0)
+
+        val sX = sin(x / 2.0)
+        val sY = sin(y / 2.0)
+        val sZ = sin(z / 2.0)
+
+        val qX = sX * cY * cZ + cX * sY * sZ
+        val qY = cX * sY * cZ - sX * cY * sZ
+        val qZ = cX * cY * sZ - sX * sY * cZ
+        val qW = cX * cY * cZ + sX * sY * sZ
+
+        return Quaternion(qX.toFloat(), qY.toFloat(), qZ.toFloat(), qW.toFloat())
     }
 }

@@ -36,11 +36,11 @@ export class AbsoluteOrientationWeb extends WebPlugin implements AbsoluteOrienta
 		if (isIos) {
 			requestPermission().then((res) => {
 				if (res === 'granted') {
-					window.addEventListener('deviceorientation', this._deviceOrientationHandlerIos);
-					this._windowListeners.push({
-						event: 'deviceorientation',
-						handler: this._deviceOrientationHandlerIos
-					});
+					const handler = (event: DeviceOrientationEvent) => {
+						this._deviceOrientationHandlerIos(event as unknown as DeviceOrientationEventIos);
+					};
+					window.addEventListener('deviceorientation', handler);
+					this._windowListeners.push({ event: 'deviceorientation', handler });
 					this._active = true;
 				} else {
 					// TODO: Use unified errors
@@ -49,20 +49,17 @@ export class AbsoluteOrientationWeb extends WebPlugin implements AbsoluteOrienta
 			});
 		} else {
 			if (window.ondeviceorientationabsolute !== undefined) {
-				window.addEventListener(
-					'deviceorientationabsolute',
-					this._deviceOrientationAbsoluteHandler
-				);
-				this._windowListeners.push({
-					event: 'deviceorientationabsolute',
-					handler: this._deviceOrientationAbsoluteHandler
-				});
+				const handler = (event: DeviceOrientationEvent) => {
+					this._deviceOrientationAbsoluteHandler(event);
+				};
+				window.addEventListener('deviceorientationabsolute', handler);
+				this._windowListeners.push({ event: 'deviceorientationabsolute', handler });
 			} else {
-				window.addEventListener('deviceorientation', this._deviceOrientationHandler);
-				this._windowListeners.push({
-					event: 'deviceorientation',
-					handler: this._deviceOrientationHandler
-				});
+				const handler = (event: DeviceOrientationEvent) => {
+					this._deviceOrientationHandler(event);
+				};
+				window.addEventListener('deviceorientation', handler);
+				this._windowListeners.push({ event: 'deviceorientation', handler });
 			}
 			this._active = true;
 		}
@@ -94,14 +91,13 @@ export class AbsoluteOrientationWeb extends WebPlugin implements AbsoluteOrienta
 		this._readingListeners.delete(id);
 	}
 
-	private _deviceOrientationHandlerIos(event: DeviceOrientationEvent) {
-		const iosEvent = event as unknown as DeviceOrientationEventIos;
-		if (iosEvent.webkitCompassHeading === null || iosEvent.webkitCompassHeading === undefined) {
+	private _deviceOrientationHandlerIos(event: DeviceOrientationEventIos) {
+		if (event.webkitCompassHeading === null || event.webkitCompassHeading === undefined) {
 			return;
 		}
 		const reading: AbsoluteOrientationReading = {
 			timestamp: new Date().valueOf(),
-			compassHeading: 360 - iosEvent.webkitCompassHeading
+			compassHeading: 360 - event.webkitCompassHeading
 		};
 		this._sendReading(reading);
 	}
@@ -128,6 +124,16 @@ export class AbsoluteOrientationWeb extends WebPlugin implements AbsoluteOrienta
 			z: cX * cY * sZ - sX * sY * cZ,
 			w: cX * cY * cZ + sX * sY * sZ
 		};
+		const magnitude = Math.sqrt(
+			quaternion.w * quaternion.w +
+				quaternion.x * quaternion.x +
+				quaternion.y * quaternion.y +
+				quaternion.z * quaternion.z
+		);
+		quaternion.w /= magnitude;
+		quaternion.x /= magnitude;
+		quaternion.y /= magnitude;
+		quaternion.z /= magnitude;
 		const reading: AbsoluteOrientationReading = {
 			timestamp: new Date().valueOf(),
 			quaternion,
@@ -161,7 +167,7 @@ export class AbsoluteOrientationWeb extends WebPlugin implements AbsoluteOrienta
 		const y = quaternion.y;
 		const z = quaternion.z;
 		const w = quaternion.w;
-		const yaw = Math.atan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z));
+		const yaw = Math.atan2(2.0 * (x * z - w * y), 1.0 - 2.0 * (y * y + z * z));
 		let heading = this._radToDeg(-yaw);
 		if (heading < 0) {
 			heading += 360;
