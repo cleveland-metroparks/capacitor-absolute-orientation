@@ -106,34 +106,25 @@ export class AbsoluteOrientationWeb extends WebPlugin implements AbsoluteOrienta
 		if (event.alpha === null || event.beta === null || event.gamma === null) {
 			return;
 		}
-		const x = this._degToRad(event.beta);
-		const y = this._degToRad(event.alpha);
-		const z = -this._degToRad(event.gamma);
+		const alphaRad = this._degToRad(event.alpha);
+		const betaRad = this._degToRad(event.beta);
+		const gammaRad = this._degToRad(event.gamma);
 
-		const cX = Math.cos(x / 2.0);
-		const cY = Math.cos(y / 2.0);
-		const cZ = Math.cos(z / 2.0);
+		const cB = Math.cos(betaRad / 2.0);
+		const cG = Math.cos(gammaRad / 2.0);
+		const cA = Math.cos(alphaRad / 2.0);
 
-		const sX = Math.sin(x / 2.0);
-		const sY = Math.sin(y / 2.0);
-		const sZ = Math.sin(z / 2.0);
+		const sB = Math.sin(betaRad / 2.0);
+		const sG = Math.sin(gammaRad / 2.0);
+		const sA = Math.sin(alphaRad / 2.0);
 
 		const quaternion: Quaternion = {
-			x: sX * cY * cZ + cX * sY * sZ,
-			y: cX * sY * cZ - sX * cY * sZ,
-			z: cX * cY * sZ - sX * sY * cZ,
-			w: cX * cY * cZ + sX * sY * sZ
+			x: sB * cG * cA - cB * sG * sA,
+			y: cB * sG * cA + sB * cG * sA,
+			z: cB * cG * sA + sB * sG * cA,
+			w: cB * cG * cA - sB * sG * sA
 		};
-		const magnitude = Math.sqrt(
-			quaternion.w * quaternion.w +
-				quaternion.x * quaternion.x +
-				quaternion.y * quaternion.y +
-				quaternion.z * quaternion.z
-		);
-		quaternion.w /= magnitude;
-		quaternion.x /= magnitude;
-		quaternion.y /= magnitude;
-		quaternion.z /= magnitude;
+
 		const reading: AbsoluteOrientationReading = {
 			timestamp: new Date().valueOf(),
 			quaternion,
